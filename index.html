@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Vendas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Reset e configurações básicas */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+
+        /* Sistema de abas */
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px 10px 0 0;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-button:hover {
+            background: #e9ecef;
+        }
+
+        .tab-button.active {
+            background: white;
+            border-bottom: 3px solid #3498db;
+            color: #3498db;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 25px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Formulários */
+        .form-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .form-title {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group input, .form-group select {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        /* Botões */
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            padding: 12px 20px;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-edit {
+            background-color: #f39c12;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+
+        .btn-edit:hover {
+            background-color: #d68910;
+        }
+
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #219653;
+        }
+
+        /* Tabelas */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e1e1e1;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Barra de busca */
+        .search-container {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px 0 0 5px;
+            font-size: 16px;
+        }
+
+        .search-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            padding: 0 20px;
+            cursor: pointer;
+        }
+
+        /* Mensagens de alerta */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+
+        /* Relatórios */
+        .report-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .report-controls select, .report-controls input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #7f8c8d;
+            border-top: 1px solid #e1e1e1;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .form-group {
+                flex-direction: column;
+            }
+            
+            .form-group input, .form-group select {
+                min-width: 100%;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sistema de Gerenciamento de Vendas</h1>
+        </header>
+
+        <!-- Sistema de Abas -->
+        <div class="tabs">
+            <button class="tab-button active" data-tab="clientes">Clientes</button>
+            <button class="tab-button" data-tab="produtos">Produtos</button>
+            <button class="tab-button" data-tab="vendas">Vendas</button>
+            <button class="tab-button" data-tab="relatorios">Relatórios</button>
+        </div>
+
+        <!-- Aba de Clientes -->
+        <div id="clientes" class="tab-content active">
+            <div class="form-container">
+                <h3 class="form-title">Adicionar/Editar Cliente</h3>
+                <form id="clientForm">
+                    <input type="hidden" id="clientId">
+                    <div class="form-group">
+                        <input type="text" id="clientName" placeholder="Nome" required>
+                        <input type="email" id="clientEmail" placeholder="Email" required>
+                        <input type="text" id="clientPhone" placeholder="Telefone" required>
+                    </div>
+                    <button type="submit" class="btn-primary" id="clientSubmit">Adicionar Cliente</button>
+                    <button type="button" class="btn-danger" id="clientCancel" style="display: none;">Cancelar Edição</button>
+                </form>
+            </div>
+
+            <div class="search-container">
+                <input type="text" id="clientSearch" class="search-input" placeholder="Buscar cliente por nome, email ou telefone...">
+                <button class="search-button" onclick="searchClients()">🔍</button>
+            </div>
+
+            <div class="table-container">
+                <table id="clientTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Telefone</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientList">
+                        <!-- Dados carregados via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Aba de Produtos -->
+        <div id="produtos" class="tab-content">
+            <div class="form-container">
+                <h3 class="form-title">Adicionar/Editar Produto</h3>
+                <form id="productForm">
+                    <input type="hidden" id="productId">
+                    <div class="form-group">
+                        <input type="text" id="productName" placeholder="Nome" required>
+                        <input type="number" id="productPrice" placeholder="Preço" step="0.01" required>
+                        <input type="number" id="productStock" placeholder="Estoque" required>
+                    </div>
+                    <button type="submit" class="btn-primary" id="productSubmit">Adicionar Produto</button>
+                    <button type="button" class="btn-danger" id="productCancel" style="display: none;">Cancelar Edição</button>
+                </form>
+            </div>
+
+            <div class="search-container">
+                <input type="text" id="productSearch" class="search-input" placeholder="Buscar produto por nome...">
+                <button class="search-button" onclick="searchProducts()">🔍</button>
+            </div>
+
+            <div class="table-container">
+                <table id="productTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Preço</th>
+                            <th>Estoque</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productList">
+                        <!-- Dados carregados via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Aba de Vendas -->
+        <div id="vendas" class="tab-content">
+            <div class="form-container">
+                <h3 class="form-title">Registrar Venda</h3>
+                <form id="saleForm">
+                    <div class="form-group">
+                        <select id="saleClient" required>
+                            <option value="">Selecione um cliente</option>
+                        </select>
+                        <select id="saleProduct" required>
+                            <option value="">Selecione um produto</option>
+                        </select>
+                        <input type="number" id="saleQuantity" placeholder="Quantidade" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Registrar Venda</button>
+                </form>
+            </div>
+
+            <div class="search-container">
+                <input type="text" id="saleSearch" class="search-input" placeholder="Buscar venda por cliente, produto ou ID...">
+                <button class="search-button" onclick="searchSales()">🔍</button>
+            </div>
+
+            <div class="table-container">
+                <table id="salesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                            <th>Valor</th>
+                            <th>Data</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesList">
+                        <!-- Dados carregados via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Aba de Relatórios -->
+        <div id="relatorios" class="tab-content">
+            <div class="form-container">
+                <h3 class="form-title">Relatório de Vendas</h3>
+                <div class="report-controls">
+                    <select id="reportMonth">
+                        <option value="0">Janeiro</option>
+                        <option value="1">Fevereiro</option>
+                        <option value="2">Março</option>
+                        <option value="3">Abril</option>
+                        <option value="4">Maio</option>
+                        <option value="5">Junho</option>
+                        <option value="6">Julho</option>
+                        <option value="7">Agosto</option>
+                        <option value="8">Setembro</option>
+                        <option value="9">Outubro</option>
+                        <option value="10">Novembro</option>
+                        <option value="11">Dezembro</option>
+                    </select>
+                    <select id="reportYear">
+                        <!-- Opções de ano serão preenchidas via JS -->
+                    </select>
+                    <button class="btn-success" onclick="generateReport()">Gerar Relatório</button>
+                    <button class="btn-primary" onclick="exportReport()">Exportar para PDF</button>
+                </div>
+            </div>
+
+            <div class="stats-grid" id="reportStats">
+                <!-- Estatísticas serão preenchidas via JS -->
+            </div>
+
+            <div class="charts-row">
+                <div class="chart-container">
+                    <h3 class="chart-title">Vendas por Produto</h3>
+                    <canvas id="productChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 class="chart-title">Vendas por Cliente</h3>
+                    <canvas id="clientChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">Vendas Diárias</h3>
+                <canvas id="dailyChart"></canvas>
+            </div>
+
+            <div class="table-container">
+                <h3>Detalhes das Vendas</h3>
+                <table id="reportTable">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Cliente</th>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                            <th>Valor Unitário</th>
+                            <th>Valor Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportList">
+                        <!-- Dados carregados via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <footer>
+            <p>Sistema de Gerenciamento de Vendas &copy; 2025</p>
+        </footer>
+    </div>
+
+    <!-- Modal para confirmação de exclusão -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Confirmar Exclusão</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <p id="deleteMessage">Tem certeza que deseja excluir este item?</p>
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn-danger" id="confirmDelete">Excluir</button>
+                <button class="btn-primary" id="cancelDelete" style="margin-left: 10px;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Base URL da API
+        const API_BASE = 'http://localhost:4000';
+
+        // Estado da aplicação
+        let state = {
+            editingClient: null,
+            editingProduct: null,
+            clients: [],
+            products: [],
+            sales: [],
+            filteredClients: [],
+            filteredProducts: [],
+            filteredSales: [],
+            currentReport: {
+                month: new Date().getMonth(),
+                year: new Date().getFullYear(),
+                data: []
+            },
+            charts: {}
+        };
+
+        // Elementos DOM
+        const elements = {
+            // Abas
+            tabButtons: document.querySelectorAll('.tab-button'),
+            tabContents: document.querySelectorAll('.tab-content'),
+            
+            // Formulários
+            clientForm: document.getElementById('clientForm'),
+            productForm: document.getElementById('productForm'),
+            saleForm: document.getElementById('saleForm'),
+            
+            // Campos de formulário
+            clientId: document.getElementById('clientId'),
+            clientName: document.getElementById('clientName'),
+            clientEmail: document.getElementById('clientEmail'),
+            clientPhone: document.getElementById('clientPhone'),
+            clientSubmit: document.getElementById('clientSubmit'),
+            clientCancel: document.getElementById('clientCancel'),
+            
+            productId: document.getElementById('productId'),
+            productName: document.getElementById('productName'),
+            productPrice: document.getElementById('productPrice'),
+            productStock: document.getElementById('productStock'),
+            productSubmit: document.getElementById('productSubmit'),
+            productCancel: document.getElementById('productCancel'),
+            
+            saleClient: document.getElementById('saleClient'),
+            saleProduct: document.getElementById('saleProduct'),
+            saleQuantity: document.getElementById('saleQuantity'),
+            
+            // Listas
+            clientList: document.getElementById('clientList'),
+            productList: document.getElementById('productList'),
+            salesList: document.getElementById('salesList'),
+            
+            // Buscas
+            clientSearch: document.getElementById('clientSearch'),
+            productSearch: document.getElementById('productSearch'),
+            saleSearch: document.getElementById('saleSearch'),
+            
+            // Relatórios
+            reportMonth: document.getElementById('reportMonth'),
+            reportYear: document.getElementById('reportYear'),
+            reportStats: document.getElementById('reportStats'),
+            reportList: document.getElementById('reportList'),
+            
+            // Modal
+            deleteModal: document.getElementById('deleteModal'),
+            deleteMessage: document.getElementById('deleteMessage'),
+            confirmDelete: document.getElementById('confirmDelete'),
+            cancelDelete: document.getElementById('cancelDelete'),
+            closeModal: document.querySelector('.close-modal')
+        };
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            initTabs();
+            initForms();
+            initModal();
+            initReportControls();
+            reloadAllData();
+        });
+
+        // Sistema de abas
+        function initTabs() {
+            elements.tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Atualizar botões
+                    elements.tabButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Atualizar conteúdos
+                    elements.tabContents.forEach(content => content.classList.remove('active'));
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // Recarregar dados da aba ativa
+                    if (tabId === 'clientes') {
+                        loadClients();
+                    } else if (tabId === 'produtos') {
+                        loadProducts();
+                    } else if (tabId === 'vendas') {
+                        loadSales();
+                    } else if (tabId === 'relatorios') {
+                        generateReport();
+                    }
+                });
+            });
+        }
+
+        // Inicializar formulários
+        function initForms() {
+            // Formulário de cliente
+            elements.clientForm.addEventListener('submit', handleClientSubmit);
+            elements.clientCancel.addEventListener('click', cancelClientEdit);
+            
+            // Formulário de produto
+            elements.productForm.addEventListener('submit', handleProductSubmit);
+            elements.productCancel.addEventListener('click', cancelProductEdit);
+            
+            // Formulário de venda
+            elements.saleForm.addEventListener('submit', handleSaleSubmit);
+            
+            // Busca em tempo real
+            elements.clientSearch.addEventListener('input', function() {
+                searchClients(this.value);
+            });
+            
+            elements.productSearch.addEventListener('input', function() {
+                searchProducts(this.value);
+            });
+            
+            elements.saleSearch.addEventListener('input', function() {
+                searchSales(this.value);
+            });
+        }
+
+        // Inicializar controles de relatório
+        function initReportControls() {
+            // Preencher anos (últimos 5 anos)
+            const currentYear = new Date().getFullYear();
+            for (let i = currentYear - 2; i <= currentYear + 2; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                if (i === currentYear) option.selected = true;
+                elements.reportYear.appendChild(option);
+            }
+            
+            // Definir mês atual como padrão
+            elements.reportMonth.value = new Date().getMonth();
+        }
+
+        // Inicializar modal
+        function initModal() {
+            elements.closeModal.addEventListener('click', closeDeleteModal);
+            elements.cancelDelete.addEventListener('click', closeDeleteModal);
+            
+            // Fechar modal ao clicar fora
+            elements.deleteModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeDeleteModal();
+                }
+            });
+        }
+
+        // Função para exibir mensagens de alerta
+        function showAlert(message, type = 'success') {
+            // Remove alertas existentes
+            const existingAlert = document.querySelector('.alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            // Cria novo alerta
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            // Insere no topo da página
+            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.tabs'));
+            
+            // Remove após 5 segundos
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Função para recarregar todos os dados
+        async function reloadAllData() {
+            try {
+                await Promise.all([
+                    loadClients(),
+                    loadProducts(),
+                    loadSales()
+                ]);
+                
+                // Atualizar dropdowns de venda
+                updateSaleDropdowns();
+            } catch (error) {
+                console.error('Erro ao recarregar dados:', error);
+                showAlert('Erro ao carregar dados. Verifique se o servidor está rodando.', 'error');
+            }
+        }
+
+        // CLIENTES
+        async function handleClientSubmit(e) {
+            e.preventDefault();
+            
+            const id = elements.clientId.value;
+            const name = elements.clientName.value.trim();
+            const email = elements.clientEmail.value.trim();
+            const phone = elements.clientPhone.value.trim();
+
+            if (!name || !email || !phone) {
+                showAlert('Por favor, preencha todos os campos.', 'error');
+                return;
+            }
+
+            const client = { Nome: name, Email: email, Telefone: phone };
+            const url = id ? `${API_BASE}/clients/${id}` : `${API_BASE}/clients`;
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(client),
+                });
+
+                if (response.ok) {
+                    showAlert(id ? 'Cliente atualizado com sucesso!' : 'Cliente cadastrado com sucesso!');
+                    elements.clientForm.reset();
+                    cancelClientEdit();
+                    await reloadAllData();
+                } else {
+                    showAlert('Erro ao salvar cliente.', 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro de conexão. Verifique se o servidor está rodando.', 'error');
+            }
+        }
+
+        function editClient(id) {
+            const client = state.clients.find(c => c.Id == id);
+            if (client) {
+                state.editingClient = client;
+                elements.clientId.value = client.Id;
+                elements.clientName.value = client.Nome;
+                elements.clientEmail.value = client.Email;
+                elements.clientPhone.value = client.Telefone;
+                elements.clientSubmit.textContent = 'Atualizar Cliente';
+                elements.clientCancel.style.display = 'inline-block';
+            }
+        }
+
+        function cancelClientEdit() {
+            state.editingClient = null;
+            elements.clientId.value = '';
+            elements.clientForm.reset();
+            elements.clientSubmit.textContent = 'Adicionar Cliente';
+            elements.clientCancel.style.display = 'none';
+        }
+
+        function openDeleteClientModal(id) {
+            const client = state.clients.find(c => c.Id == id);
+            if (client) {
+                elements.deleteMessage.textContent = `Tem certeza que deseja excluir o cliente "${client.Nome}"?`;
+                elements.confirmDelete.onclick = () => deleteClient(id);
+                elements.deleteModal.style.display = 'flex';
+            }
+        }
+
+        async function deleteClient(id) {
+            try {
+                const response = await fetch(`${API_BASE}/clients/${id}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    showAlert('Cliente removido com sucesso!');
+                    closeDeleteModal();
+                    await reloadAllData();
+                } else {
+                    showAlert('Erro ao remover cliente.', 'error');
+                }
+            } catch (error) {
+                console.error("Erro ao deletar cliente:", error);
+                showAlert('Erro ao remover cliente.', 'error');
+            }
+        }
+
+        async function loadClients() {
+            try {
+                const response = await fetch(`${API_BASE}/clients`);
+                state.clients = await response.json();
+                state.filteredClients = [...state.clients];
+                renderClients();
+            } catch (error) {
+                console.error('Erro ao carregar clientes:', error);
+                elements.clientList.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Erro ao carregar clientes</td></tr>';
+            }
+        }
+
+        function renderClients() {
+            const list = elements.clientList;
+            list.innerHTML = '';
+
+            if (state.filteredClients.length === 0) {
+                list.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum cliente encontrado</td></tr>';
+                return;
+            }
+
+            state.filteredClients.forEach(client => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${client.Id}</td>
+                    <td>${client.Nome}</td>
+                    <td>${client.Email || '-'}</td>
+                    <td>${client.Telefone || '-'}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editClient(${client.Id})">✏️ Editar</button>
+                        <button class="btn-danger" onclick="openDeleteClientModal(${client.Id})">🗑 Excluir</button>
+                    </td>`;
+                list.appendChild(row);
+            });
+        }
+
+        function searchClients(query = '') {
+            if (!query) {
+                state.filteredClients = [...state.clients];
+            } else {
+                const lowerQuery = query.toLowerCase();
+                state.filteredClients = state.clients.filter(client => 
+                    client.Nome.toLowerCase().includes(lowerQuery) ||
+                    (client.Email && client.Email.toLowerCase().includes(lowerQuery)) ||
+                    (client.Telefone && client.Telefone.includes(query))
+                );
+            }
+            renderClients();
+        }
+
+        // PRODUTOS
+        async function handleProductSubmit(e) {
+            e.preventDefault();
+            
+            const id = elements.productId.value;
+            const name = elements.productName.value.trim();
+            const price = parseFloat(elements.productPrice.value);
+            const stock = parseInt(elements.productStock.value);
+
+            if (!name || isNaN(price) || isNaN(stock) || price < 0 || stock < 0) {
+                showAlert('Por favor, preencha todos os campos corretamente.', 'error');
+                return;
+            }
+
+            const product = { Nome: name, Preco: price, Estoque: stock };
+            const url = id ? `${API_BASE}/products/${id}` : `${API_BASE}/products`;
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(product),
+                });
+
+                if (response.ok) {
+                    showAlert(id ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
+                    elements.productForm.reset();
+                    cancelProductEdit();
+                    await reloadAllData();
+                } else {
+                    showAlert('Erro ao salvar produto.', 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro de conexão. Verifique se o servidor está rodando.', 'error');
+            }
+        }
+
+        function editProduct(id) {
+            const product = state.products.find(p => p.Id == id);
+            if (product) {
+                state.editingProduct = product;
+                elements.productId.value = product.Id;
+                elements.productName.value = product.Nome;
+                elements.productPrice.value = product.Preco;
+                elements.productStock.value = product.Estoque;
+                elements.productSubmit.textContent = 'Atualizar Produto';
+                elements.productCancel.style.display = 'inline-block';
+            }
+        }
+
+        function cancelProductEdit() {
+            state.editingProduct = null;
+            elements.productId.value = '';
+            elements.productForm.reset();
+            elements.productSubmit.textContent = 'Adicionar Produto';
+            elements.productCancel.style.display = 'none';
+        }
+
+        function openDeleteProductModal(id) {
+            const product = state.products.find(p => p.Id == id);
+            if (product) {
+                elements.deleteMessage.textContent = `Tem certeza que deseja excluir o produto "${product.Nome}"?`;
+                elements.confirmDelete.onclick = () => deleteProduct(id);
+                elements.deleteModal.style.display = 'flex';
+            }
+        }
+
+        async function deleteProduct(id) {
+            try {
+                const response = await fetch(`${API_BASE}/products/${id}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    showAlert('Produto removido com sucesso!');
+                    closeDeleteModal();
+                    await reloadAllData();
+                } else {
+                    showAlert('Erro ao remover produto.', 'error');
+                }
+            } catch (error) {
+                console.error("Erro ao deletar produto:", error);
+                showAlert('Erro ao remover produto.', 'error');
+            }
+        }
+
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_BASE}/products`);
+                state.products = await response.json();
+                state.filteredProducts = [...state.products];
+                renderProducts();
+            } catch (error) {
+                console.error('Erro ao carregar produtos:', error);
+                elements.productList.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Erro ao carregar produtos</td></tr>';
+            }
+        }
+
+        function renderProducts() {
+            const list = elements.productList;
+            list.innerHTML = '';
+
+            if (state.filteredProducts.length === 0) {
+                list.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum produto encontrado</td></tr>';
+                return;
+            }
+
+            state.filteredProducts.forEach(product => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${product.Id}</td>
+                    <td>${product.Nome}</td>
+                    <td>R$ ${parseFloat(product.Preco).toFixed(2)}</td>
+                    <td>${product.Estoque}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editProduct(${product.Id})">✏️ Editar</button>
+                        <button class="btn-danger" onclick="openDeleteProductModal(${product.Id})">🗑 Excluir</button>
+                    </td>`;
+                list.appendChild(row);
+            });
+        }
+
+        function searchProducts(query = '') {
+            if (!query) {
+                state.filteredProducts = [...state.products];
+            } else {
+                const lowerQuery = query.toLowerCase();
+                state.filteredProducts = state.products.filter(product => 
+                    product.Nome.toLowerCase().includes(lowerQuery)
+                );
+            }
+            renderProducts();
+        }
+
+        // VENDAS
+        async function handleSaleSubmit(e) {
+            e.preventDefault();
+            
+            const clientId = parseInt(elements.saleClient.value);
+            const productId = parseInt(elements.saleProduct.value);
+            const quantity = parseInt(elements.saleQuantity.value);
+
+            if (isNaN(clientId) || isNaN(productId) || isNaN(quantity) || quantity <= 0) {
+                showAlert('Por favor, preencha todos os campos corretamente.', 'error');
+                return;
+            }
+
+            const sale = {
+                ClienteId: clientId,
+                ProdutoId: productId,
+                Quantidade: quantity
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/sales`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(sale),
+                });
+
+                if (response.ok) {
+                    showAlert('Venda registrada com sucesso!');
+                    elements.saleForm.reset();
+                    await reloadAllData();
+                } else {
+                    const errorText = await response.text();
+                    showAlert(`Erro ao registrar venda: ${errorText}`, 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro de conexão. Verifique se o servidor está rodando.', 'error');
+            }
+        }
+
+        function openDeleteSaleModal(id) {
+            const sale = state.sales.find(s => s.Id == id);
+            if (sale) {
+                elements.deleteMessage.textContent = `Tem certeza que deseja excluir a venda #${sale.Id}?`;
+                elements.confirmDelete.onclick = () => deleteSale(id);
+                elements.deleteModal.style.display = 'flex';
+            }
+        }
+
+        async function deleteSale(id) {
+            try {
+                const response = await fetch(`${API_BASE}/sales/${id}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    showAlert('Venda removida com sucesso!');
+                    closeDeleteModal();
+                    await reloadAllData();
+                } else {
+                    showAlert('Erro ao remover venda.', 'error');
+                }
+            } catch (error) {
+                console.error("Erro ao deletar venda:", error);
+                showAlert('Erro ao remover venda.', 'error');
+            }
+        }
+
+        async function loadSales() {
+            try {
+                const response = await fetch(`${API_BASE}/sales`);
+                state.sales = await response.json();
+                state.filteredSales = [...state.sales];
+                renderSales();
+            } catch (error) {
+                console.error('Erro ao carregar vendas:', error);
+                elements.salesList.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Erro ao carregar vendas</td></tr>';
+            }
+        }
+
+        function renderSales() {
+            const list = elements.salesList;
+            list.innerHTML = '';
+
+            if (state.filteredSales.length === 0) {
+                list.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhuma venda encontrada</td></tr>';
+                return;
+            }
+
+            state.filteredSales.forEach(sale => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${sale.Id}</td>
+                    <td>${sale.Cliente}</td>
+                    <td>${sale.Produto}</td>
+                    <td>${sale.Quantidade}</td>
+                    <td>R$ ${parseFloat(sale.ValorVenda).toFixed(2)}</td>
+                    <td>${new Date().toLocaleDateString('pt-BR')}</td>
+                    <td>
+                        <button class="btn-danger" onclick="openDeleteSaleModal(${sale.Id})">🗑 Excluir</button>
+                    </td>`;
+                list.appendChild(row);
+            });
+        }
+
+        function searchSales(query = '') {
+            if (!query) {
+                state.filteredSales = [...state.sales];
+            } else {
+                const lowerQuery = query.toLowerCase();
+                state.filteredSales = state.sales.filter(sale => 
+                    sale.Id.toString().includes(query) ||
+                    sale.Cliente.toLowerCase().includes(lowerQuery) ||
+                    sale.Produto.toLowerCase().includes(lowerQuery)
+                );
+            }
+            renderSales();
+        }
+
+        // Atualizar dropdowns de venda
+        function updateSaleDropdowns() {
+            // Clientes
+            elements.saleClient.innerHTML = '<option value="">Selecione um cliente</option>';
+            state.clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.Id;
+                option.textContent = `${client.Id} - ${client.Nome}`;
+                elements.saleClient.appendChild(option);
+            });
+            
+            // Produtos
+            elements.saleProduct.innerHTML = '<option value="">Selecione um produto</option>';
+            state.products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.Id;
+                option.textContent = `${product.Id} - ${product.Nome} (R$ ${parseFloat(product.Preco).toFixed(2)})`;
+                elements.saleProduct.appendChild(option);
+            });
+        }
+
+        // RELATÓRIOS
+        function generateReport() {
+            const month = parseInt(elements.reportMonth.value);
+            const year = parseInt(elements.reportYear.value);
+            
+            state.currentReport.month = month;
+            state.currentReport.year = year;
+            
+            // Filtrar vendas do mês selecionado
+            // Nota: Esta é uma simulação - em um sistema real, você precisaria de uma data real nas vendas
+            state.currentReport.data = state.sales; // Usando todas as vendas para demonstração
+            
+            renderReport();
+        }
+
+        function renderReport() {
+            const reportData = state.currentReport.data;
+            
+            // Calcular estatísticas
+            const totalVendas = reportData.length;
+            const totalValor = reportData.reduce((sum, sale) => sum + sale.ValorVenda, 0);
+            const mediaVenda = totalVendas > 0 ? totalValor / totalVendas : 0;
+            
+            // Produto mais vendido
+            const productSales = {};
+            reportData.forEach(sale => {
+                if (!productSales[sale.Produto]) {
+                    productSales[sale.Produto] = 0;
+                }
+                productSales[sale.Produto] += sale.Quantidade;
+            });
+            
+            let topProduct = { name: "Nenhum", quantity: 0 };
+            for (const [product, quantity] of Object.entries(productSales)) {
+                if (quantity > topProduct.quantity) {
+                    topProduct = { name: product, quantity: quantity };
+                }
+            }
+            
+            // Renderizar estatísticas
+            elements.reportStats.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Total de Vendas</div>
+                    <div class="stat-value">${totalVendas}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Valor Total</div>
+                    <div class="stat-value">R$ ${totalValor.toFixed(2)}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Média por Venda</div>
+                    <div class="stat-value">R$ ${mediaVenda.toFixed(2)}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Produto Mais Vendido</div>
+                    <div class="stat-value">${topProduct.name}</div>
+                    <div class="stat-label">${topProduct.quantity} unidades</div>
+                </div>
+            `;
+            
+            // Renderizar tabela de detalhes
+            elements.reportList.innerHTML = '';
+            if (reportData.length === 0) {
+                elements.reportList.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhuma venda encontrada para o período selecionado</td></tr>';
+            } else {
+                reportData.forEach(sale => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${new Date().toLocaleDateString('pt-BR')}</td>
+                        <td>${sale.Cliente}</td>
+                        <td>${sale.Produto}</td>
+                        <td>${sale.Quantidade}</td>
+                        <td>R$ ${(sale.ValorVenda / sale.Quantidade).toFixed(2)}</td>
+                        <td>R$ ${sale.ValorVenda.toFixed(2)}</td>
+                    `;
+                    elements.reportList.appendChild(row);
+                });
+            }
+            
+            // Renderizar gráficos
+            renderCharts();
+        }
+
+        function renderCharts() {
+            const reportData = state.currentReport.data;
+            
+            // Dados para gráfico de produtos
+            const productData = {};
+            reportData.forEach(sale => {
+                if (!productData[sale.Produto]) {
+                    productData[sale.Produto] = 0;
+                }
+                productData[sale.Produto] += sale.ValorVenda;
+            });
+            
+            // Dados para gráfico de clientes
+            const clientData = {};
+            reportData.forEach(sale => {
+                if (!clientData[sale.Cliente]) {
+                    clientData[sale.Cliente] = 0;
+                }
+                clientData[sale.Cliente] += sale.ValorVenda;
+            });
+            
+            // Destruir gráficos existentes
+            if (state.charts.productChart) state.charts.productChart.destroy();
+            if (state.charts.clientChart) state.charts.clientChart.destroy();
+            if (state.charts.dailyChart) state.charts.dailyChart.destroy();
+            
+            // Gráfico de produtos
+            const productCtx = document.getElementById('productChart').getContext('2d');
+            state.charts.productChart = new Chart(productCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(productData),
+                    datasets: [{
+                        label: 'Valor em Vendas (R$)',
+                        data: Object.values(productData),
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de clientes
+            const clientCtx = document.getElementById('clientChart').getContext('2d');
+            state.charts.clientChart = new Chart(clientCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(clientData),
+                    datasets: [{
+                        data: Object.values(clientData),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.5)',
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(255, 206, 86, 0.5)',
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(153, 102, 255, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+            
+            // Gráfico de vendas diárias (simulado)
+            const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+            state.charts.dailyChart = new Chart(dailyCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 30}, (_, i) => `${i+1}/${state.currentReport.month+1}`),
+                    datasets: [{
+                        label: 'Vendas Diárias (R$)',
+                        data: Array.from({length: 30}, () => Math.random() * 1000),
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function exportReport() {
+            // Simulação de exportação para PDF
+            showAlert('Funcionalidade de exportação para PDF será implementada em breve!', 'success');
+        }
+
+        // Fechar modal
+        function closeDeleteModal() {
+            elements.deleteModal.style.display = 'none';
+        }
+
+        // Funções globais para os eventos onclick
+        window.searchClients = searchClients;
+        window.searchProducts = searchProducts;
+        window.searchSales = searchSales;
+        window.editClient = editClient;
+        window.editProduct = editProduct;
+        window.openDeleteClientModal = openDeleteClientModal;
+        window.openDeleteProductModal = openDeleteProductModal;
+        window.openDeleteSaleModal = openDeleteSaleModal;
+        window.generateReport = generateReport;
+        window.exportReport = exportReport;
+    </script>
+</body>
+</html>
